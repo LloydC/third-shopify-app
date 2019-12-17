@@ -38,7 +38,7 @@ router.get('/install', function (req, res, next) {
 
     //build the url
     var installUrl = `https://${shop}/admin/oauth/authorize?client_id=${appId}&scope=${appScope}&redirect_uri=https://${appDomain}/shopify/auth`;
-
+    // res.redirect(installUrl);
     //Do I have the token already for this store?
     //Check database
     //For tutorial ONLY - check .env variable value
@@ -71,8 +71,10 @@ router.get('/auth', function (req, res, next) {
 
     // 1. Parse the string URL to object
     let urlObj = url.parse(req.url);
+    console.log(`urlObj ${urlObj}`)
     // 2. Get the 'query string' portion
     let query = urlObj.search.slice(1);
+    console.log(`query ${query}`)
     if (verifyCall.verify(query)) {
         //get token
         console.log('get token');
@@ -114,6 +116,61 @@ router.get('/app', function (req, res, next) {
     let shop = req.query.shop;
     res.render('app', { shop: shop });
 });
+// Route to show all the products of a store
+router.get('/app/products', function (req, res, next) {
+
+    let url = 'https://' + req.query.shop + '/admin/products.json';
+
+    let options = {
+        method: 'GET',
+        uri: url,
+        json: true,
+        headers: {
+            'X-Shopify-Access-Token': process.env.appStoreTokenTest,
+            'content-type': 'application/json'
+        }
+    };
+
+    request(options)
+        .then(function (parsedBody) {
+            console.log(parsedBody.products[0]);
+            res.render('products',{products: parsedBody.products});
+        })
+        .catch(function (err) {
+            console.log(err);
+            res.json(err);
+        });
+
+
+});
+
+router.get('/app/orders', function (req, res, next) {
+
+    let url = 'https://' + req.query.shop + '/admin/orders.json';
+
+    let options = {
+        method: 'GET',
+        uri: url,
+        json: true,
+        headers: {
+            'X-Shopify-Access-Token': process.env.appStoreTokenTest,
+            'content-type': 'application/json'
+        }
+    };
+
+    request(options)
+        .then(function (parsedBody) {
+            console.log(parsedBody);
+            res.render('orders');
+        })
+        .catch(function (err) {
+            console.log(err);
+            res.json(err);
+        });
+
+
+});
+
 router.post('/app/create-product', function (req, res) {
 
     //this is what we need to post
@@ -269,32 +326,7 @@ router.post('/app/delete', function (req, res) {
             res.json(false);
         });
 });
-router.get('/app/products', function (req, res, next) {
 
-    let url = 'https://' + req.query.shop + '/admin/products.json';
-
-    let options = {
-        method: 'GET',
-        uri: url,
-        json: true,
-        headers: {
-            'X-Shopify-Access-Token': process.env.appStoreTokenTest,
-            'content-type': 'application/json'
-        }
-    };
-
-    request(options)
-        .then(function (parsedBody) {
-            console.log(parsedBody);
-            res.json(parsedBody);
-        })
-        .catch(function (err) {
-            console.log(err);
-            res.json(err);
-        });
-
-
-});
 
 
 module.exports = router;
